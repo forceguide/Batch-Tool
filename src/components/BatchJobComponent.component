@@ -1,0 +1,141 @@
+<apex:component controller="BatchManagerTool" allowDML="true" >
+	<apex:attribute name="Status" description="Status of the batch job." type="String" required="true" />
+	<apex:attribute name="BatchJobs" description="List of batch jobs" type="BatchJob[]" required="true" />
+
+	<apex:styleSheet value="{!URLFOR($Resource.BatchResource,'BatchResource/css/dataTables.css')}" />
+	<apex:includeScript value="{!URLFOR($Resource.BatchResource,'BatchResource/js/datatables.js')}" /> 
+    
+	<script type="text/javascript" >
+		//Initialize jquery
+		$(document).ready(function() {
+			$('#{!Status}-table').dataTable({
+                "pagingType": "full_numbers"
+            });
+		})
+	</script>
+
+	<style type="text/css" >
+		.lblclass {
+            -moz-box-shadow:inset 0px 1px 0px 0px #284470;
+            -webkit-box-shadow:inset 0px 1px 0px 0px #284470;
+            box-shadow:inset 0px 1px 0px 0px #284470;
+            
+            background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #415989), color-stop(1, #516ca3));
+            background:-moz-linear-gradient(top, #415989 5%, #516ca3 100%);
+            background:-webkit-linear-gradient(top, #415989 5%, #516ca3 100%);
+            background:-o-linear-gradient(top, #415989 5%, #516ca3 100%);
+            background:-ms-linear-gradient(top, #415989 5%, #516ca3 100%);
+            background:linear-gradient(to bottom, #415989 5%, #516ca3 100%);
+            filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#415989', endColorstr='#516ca3',GradientType=0);
+            
+            background-color:#415989;
+            
+            border:1px solid #1f2f47;
+            
+            display:inline-block;
+            color:#ffffff;
+            font-family:arial;
+            font-size:13px;
+            font-weight:bold;
+            padding:6px 12px;
+            width:98%;
+            text-decoration:none;
+        }
+
+        div.statusDiv{
+        	padding-left:3%;
+        	padding-right:5%;
+        }
+
+        table.batchJobTable{
+        	width:100%;
+        }
+        .dataTables_wrapper{
+        	padding-top:25px;
+        }
+        a, a:hover{
+        	text-decoration:none;
+        }
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            white-space:nowrap;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+	</style>
+
+	<apex:componentBody >
+		<apex:actionFunction name="getBatchJobs" action="{!refreshBatchJobs}" reRender="theForm" >
+			<apex:param name="jobStatus" value="false" assignTo="{!initJob}" />
+		</apex:actionFunction>
+		
+		<div class="statusDiv" >
+			<label class="lblclass" >{!Status}</label>
+			<apex:outputPanel layout="none" rendered="{!BatchJobs.size > 0}" >
+				<table class="batchJobTable" id="{!Status}-table" cellspacing="10" cellpadding="10" >
+					<thead>
+						<tr>
+							<th >{!$Label.Action}</th>
+							<th >{!$Label.Class_Name}</th>
+							<th >{!$Label.Status}</th>
+							<th >{!$Label.Order}</th>
+							<apex:outputPanel layout="none" rendered="{!Status == 'Processing'}" >
+								<th >{!$Label.Time_Taken}</th>
+							</apex:outputPanel>
+							<th >{!$ObjectType.Batch_Job__c.fields.Next_Run__c.Label}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<apex:repeat value="{!BatchJobs}" var="batch">
+							<tr>
+								<td style="padding-left:18px;" >
+									<apex:commandLink value="Execute" oncomplete="getBatchJobs();" action="{!batch.executeBatchJob}" rendered="{!(batch.batchJob.Status__c == 'Waiting' || batch.batchJob.Status__c == 'Failed' || batch.batchJob.Status__c == 'Completed' || batch.batchJob.Status__c == 'Aborted' || batch.batchJob.Status__c == 'Scheduled') && (batch.batchJob.Parent_Batch_Job__c == null || (batch.batchJob.Parent_Batch_Job__c != null && batch.batchJob.Parent_Batch_Job__r.Status__c == 'Completed'))}" />
+									<apex:commandLink value="Kill" oncomplete="getBatchJobs();" rerender="theForm" action="{!batch.abortJob}" rendered="{!batch.batchJob.Status__c == 'Queued' || batch.batchJob.Status__c == 'Preparing' || batch.batchJob.Status__c == 'Processing' }" />
+									<apex:commandLink value=" Schedule"  oncomplete="getBatchJobs();" action="{!batch.scheduleBatch}" rendered="{!batch.batchJob.Status__c == 'Waiting' || batch.batchJob.Status__c == 'Failed' || batch.batchJob.Status__c == 'Completed' || batch.batchJob.Status__c == 'Aborted' || batch.batchJob.Status__c == 'Scheduled'}" />
+								</td>
+								<td style="padding-left:18px;">
+									<apex:outputField value="{!batch.batchJob.Apex_Class__c}" />
+								</td>
+								<td style="padding-left:18px;">
+									<apex:outputField value="{!batch.batchJob.Status__c}" />
+								</td>
+								<td style="padding-left:18px;">
+									<apex:outputField value="{!batch.batchJob.Order__c}" />
+								</td>
+								<apex:outputPanel layout="none" rendered="{!batch.batchJob.Status__c == 'Processing'}" >
+									<td >
+										<apex:outputField value="{!batch.batchJob.Time_Taken__c}" />
+									</td>
+								</apex:outputPanel>
+								<td style="padding-left:18px;">
+									<apex:inputField style="width:120px;" value="{!batch.batchJob.Next_Run__c}" />
+								</td>
+							</tr>
+						</apex:repeat>
+					</tbody>
+				</table>
+			</apex:outputPanel>
+			<apex:outputPanel layout="none" rendered="{!BatchJobs.size == 0}" >
+				{!$Label.No_Jobs_Found}
+			</apex:outputPanel>
+		</div>
+	</apex:componentBody>
+</apex:component>

@@ -1,0 +1,20 @@
+<apex:page standardController="Batch_Job__c" extensions="BatchJobController" >
+  	<apex:sectionHeader subtitle="{!IF(ISBLANK(Batch_Job__c.Id), 'New Batch Job',Batch_Job__c.Name)}" />
+
+  	<apex:pageMessages />
+  	<apex:form >
+  		<apex:pageBlock title="{!IF(ISBLANK(Batch_Job__c.Id), 'New ','Edit ')}{!$ObjectType.Batch_Job__c.Label}" >
+  			<apex:pageBlockButtons >
+  				<apex:commandButton value="Save" action="{!saveRecord}" />
+  				<apex:commandButton value="Cancel" action="{!cancel}" />
+  			</apex:pageBlockButtons>
+
+  			<apex:pageBlockSection columns="2" >
+  				<apex:inputField value="{!Batch_Job__c.Apex_Class__c}" />
+  				<apex:inputField value="{!Batch_Job__c.Parent_Batch_Job__c}" />
+  				<apex:inputField value="{!Batch_Job__c.Order__c}" />
+  				<apex:inputField value="{!Batch_Job__c.Next_Run__c}" /> 
+  			</apex:pageBlockSection>
+  		</apex:pageBlock>
+  	</apex:form>
+</apex:page>

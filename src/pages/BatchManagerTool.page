@@ -1,0 +1,25 @@
+<apex:page controller="BatchManagerTool" showHeader="false" sidebar="false" action="{!refreshBatchJobs}" >
+  	<apex:sectionHeader subtitle="Batch Manager" />
+
+  	<apex:includeScript value="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" />
+   	<apex:styleSheet value="{!URLFOR($Resource.BatchResource,'BatchResource/css/bootstrap.min.css')}" />
+	<apex:includeScript value="{!URLFOR($Resource.BatchResource,'BatchResource/js/bootstrap.min.js')}" /> 
+
+
+  	<apex:form id="theForm" >
+  		<apex:actionRegion >
+	  		<div align="center" >
+	  			<apex:commandButton value="Start" action="{!startBatchJobs}" rendered="{!NOT(initJob)}" />&nbsp;&nbsp; 
+	  			<apex:commandButton value="Abort All" action="{!abortBatchJobs}" rendered="{!initJob}" />
+	  		</div><br />
+	  		<apex:repeat value="{!batchJobsList}" var="batchJob" >
+	  			<c:BatchJobComponent Status="{!batchJob.status}" BatchJobs="{!batchJob.batchJobsList}" /><br /><br /><br />
+	  		</apex:repeat>
+	  		<div align="center" >
+	  			<apex:commandButton value="Start" action="{!startBatchJobs}" rendered="{!NOT(initJob)}" />&nbsp;&nbsp;
+	  			<apex:commandButton value="Abort All" action="{!abortBatchJobs}" rendered="{!initJob}" />
+	  		</div>
+	  		<apex:actionPoller action="{!refreshBatchJobs}" reRender="theForm" interval="5" />
+  		</apex:actionRegion>
+  	</apex:form>
+</apex:page>
